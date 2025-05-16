@@ -1,10 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
+
 const statisticsRoutes = require('./src/routes/statisticsRoutes');
 const lawyerRoutes= require('./src/routes/lawyerRoutes')
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 mongoose.connect('mongodb+srv://isuru:1234@db01.lterdlp.mongodb.net/Lawyers', {
   useNewUrlParser: true,
