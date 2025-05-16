@@ -1,4 +1,6 @@
 const Lawyer = require('../models/Lawyers');
+const { updateDailyStats } = require('../utils/statsUtils');
+
 
 const createLawyer = async (data) => {
   const lawyer = new Lawyer(data);
@@ -6,29 +8,40 @@ const createLawyer = async (data) => {
 };
 
 const incrementProfileClick = async (lawyerId) => {
-  return await Lawyer.findOneAndUpdate(
-    { lawyerId },
-    { $inc: { profileClick: 1 }, $set: { timestamp: new Date() } },
-    { new: true, upsert: true } // creates document if not exists
-  );
+  const lawyer = await Lawyer.findOne({ lawyerId });
+  if (!lawyer) throw new Error("Lawyer not found");
+
+  lawyer.profileClick += 1;
+  lawyer.timestamp = new Date();
+  updateDailyStats(lawyer, 'profileClick');
+
+  await lawyer.save();
+  return lawyer;
 };
 
 const incrementProfileView = async (lawyerId) => {
-  return await Lawyer.findOneAndUpdate(
-    { lawyerId },
-    { $inc: { profileView: 1 }, $set: { timestamp: new Date() } },
-    { new: true, upsert: true } // creates document if not exists
-  );
+  const lawyer = await Lawyer.findOne({ lawyerId });
+  if (!lawyer) throw new Error("Lawyer not found");
+
+  lawyer.profileView += 1;
+  lawyer.timestamp = new Date();
+  updateDailyStats(lawyer, 'profileView');
+
+  await lawyer.save();
+  return lawyer;
 };
+
 const incrementChatStarted = async (lawyerId) => {
-  return await Lawyer.findOneAndUpdate(
-    { lawyerId },
-    { 
-      $inc: { chatStarted: 1 }, 
-      $set: { timestamp: new Date(), messageSent: false } 
-    },
-    { new: true, upsert: true }
-  );
+  const lawyer = await Lawyer.findOne({ lawyerId });
+  if (!lawyer) throw new Error("Lawyer not found");
+
+  lawyer.chatStarted += 1;
+  lawyer.timestamp = new Date();
+  lawyer.messageSent = false;
+  updateDailyStats(lawyer, 'chatStarted');
+
+  await lawyer.save();
+  return lawyer;
 };
 
 
@@ -37,4 +50,5 @@ module.exports = {
   incrementProfileClick,
   incrementProfileView,
   incrementChatStarted,
+  updateDailyStats
 };

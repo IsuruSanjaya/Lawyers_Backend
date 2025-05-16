@@ -11,6 +11,14 @@ const MessageSchema = new mongoose.Schema({
   // add other message-related fields if needed
 });
 
+const dailyStatsSchema = new mongoose.Schema({
+  date: { type: Date, required: true }, // exact date (not just day name)
+  profileClick: { type: Number, default: 0 },
+  profileView: { type: Number, default: 0 },
+  chatStarted: { type: Number, default: 0 },
+  messageSent: { type: Boolean, default: false },
+});
+
 const lawyerSchema = new mongoose.Schema({
   lawyerId: { type: String, required: true, unique: true },
   lawyersName: { type: String, required: true },
@@ -29,6 +37,8 @@ const lawyerSchema = new mongoose.Schema({
     default: false,
   },
   sessionId: { type: String },
+    dailyStats: [dailyStatsSchema], // NEW FIELD
+
 });
 
 module.exports = mongoose.model("Lawyer", lawyerSchema);

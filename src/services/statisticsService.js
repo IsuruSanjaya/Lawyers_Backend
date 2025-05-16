@@ -1,5 +1,5 @@
-const Lawyer = require('../models/Lawyers');
-const { getDateNDaysAgo } = require('../utils/dateUtils');
+const Lawyer = require("../models/Lawyers");
+const { getDateNDaysAgo } = require("../utils/dateUtils");
 
 exports.calculateMetrics = async (lawyerId) => {
   const now = new Date();
@@ -7,7 +7,17 @@ exports.calculateMetrics = async (lawyerId) => {
   const last30Days = getDateNDaysAgo(30);
 
   const lawyer = await Lawyer.findOne({ lawyerId });
-  if (!lawyer) throw new Error('Lawyer not found');
+  if (!lawyer) throw new Error("Lawyer not found");
+
+  const dailyStats = lawyer.dailyStats
+    .filter((stat) => stat.date >= last7Days)
+    .map((stat) => ({
+      day: stat.date.toLocaleDateString("en-US", { weekday: "short" }),
+      profileClick: stat.profileClick,
+      profileView: stat.profileView,
+      chatStarted: stat.chatStarted,
+      messageSent: stat.messageSent,
+    }));
 
   // Engagement Metrics (7 Days)
   const isRecent = lawyer.timestamp >= last7Days;
@@ -25,7 +35,9 @@ exports.calculateMetrics = async (lawyerId) => {
   const responseTimes7Days = [];
 
   for (const lead of leads) {
-    const firstMsg = messages.find(m => m.leadId === lead.leadId && m.sentAt > lead.assignedAt);
+    const firstMsg = messages.find(
+      (m) => m.leadId === lead.leadId && m.sentAt > lead.assignedAt
+    );
     if (firstMsg) {
       const timeDiff = (firstMsg.sentAt - lead.assignedAt) / 1000;
 
@@ -40,29 +52,32 @@ exports.calculateMetrics = async (lawyerId) => {
   }
 
   // Bounce & Conversion
-  const bounceRate = profileViews > 0 ? ((profileViews - chatsStarted) / profileViews) * 100 : 0;
-  const conversionRate = profileViews > 0 ? (chatsStarted / profileViews) * 100 : 0;
+  const bounceRate =
+    profileViews > 0 ? ((profileViews - chatsStarted) / profileViews) * 100 : 0;
+  const conversionRate =
+    profileViews > 0 ? (chatsStarted / profileViews) * 100 : 0;
 
   const avgLeadToMessage = leadToMessageTimes.length
-    ? (leadToMessageTimes.reduce((a, b) => a + b) / leadToMessageTimes.length)
+    ? leadToMessageTimes.reduce((a, b) => a + b) / leadToMessageTimes.length
     : null;
 
   const avgResponseTime7Days = responseTimes7Days.length
-    ? (responseTimes7Days.reduce((a, b) => a + b) / responseTimes7Days.length)
+    ? responseTimes7Days.reduce((a, b) => a + b) / responseTimes7Days.length
     : null;
 
   const lastBlogPublished = lawyer.blogPublished
     ? lawyer.timestamp.toDateString()
-    : 'Not published yet';
+    : "Not published yet";
 
   return {
+    last7DaysStats: dailyStats,
     profileClicks,
     profileViews,
     chatsStarted,
     messageSent,
     searchResults,
-    bounceRate: bounceRate.toFixed(2) + '%',
-    conversionRate: conversionRate.toFixed(2) + '%',
+    bounceRate: bounceRate.toFixed(2) + "%",
+    conversionRate: conversionRate.toFixed(2) + "%",
     avgLeadToMessage, // in seconds
     avgResponseTime7Days, // in seconds
     lastBlogPublished,
